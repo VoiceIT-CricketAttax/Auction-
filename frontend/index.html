@@ -1,0 +1,1142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CRICKET ATTAXX 2.0 - Elite Auction Platform</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/react@18/umd/react.development.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.27.6/babel.min.js"></script>
+  <script src="http://localhost:5000/socket.io/socket.io.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Raleway:wght@300;400;600&display=swap');
+    body {
+      background: linear-gradient(135deg, #1A1A1A, #2C2C2C);
+      color: #FFFFFF;
+      font-family: 'Raleway', sans-serif;
+      overflow-x: hidden;
+    }
+    .container {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      padding: 30px;
+      margin: 30px auto;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(255, 98, 0, 0.3);
+    }
+    .btn-orange {
+      background: linear-gradient(45deg, #FF6200, #FF8C00);
+      border: none;
+      color: #1A1A1A;
+      padding: 12px 25px;
+      border-radius: 25px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+      transition: all 0.3s ease;
+      font-family: 'Cinzel', serif;
+      font-weight: 700;
+    }
+    .btn-orange:hover {
+      background: linear-gradient(45deg, #FF8C00, #FF4500);
+      transform: scale(1.05);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+    }
+    .btn-bid {
+      background: linear-gradient(45deg, #FF6200, #FF8C00);
+      border: none;
+      color: #1A1A1A;
+      padding: 15px 40px;
+      border-radius: 30px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+      font-size: 1.2rem;
+      font-family: 'Cinzel', serif;
+      font-weight: 700;
+      animation: pulse 1.5s infinite;
+      transition: all 0.3s ease;
+    }
+    .btn-bid:hover {
+      transform: scale(1.1);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+    }
+    .text-orange {
+      color: #FF6200;
+    }
+    .text-orange-participant {
+      color: #FF6200;
+      font-size: 1.3rem;
+      font-weight: 600;
+      font-family: 'Raleway', sans-serif;
+    }
+    .card {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(10px);
+      border-radius: 15px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 98, 0, 0.3);
+      transition: transform 0.3s ease;
+    }
+    .card:hover {
+      transform: translateY(-5px);
+    }
+    .player-photo {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid #FF6200;
+      transition: transform 0.3s ease;
+    }
+    .player-photo-large {
+      width: 200px;
+      height: 200px;
+      border-radius: 15px;
+      object-fit: cover;
+      border: 3px solid #FF6200;
+      margin-bottom: 15px;
+    }
+    .player-photo:hover {
+      transform: scale(1.1);
+    }
+    .player-photo-error {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: #333;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid #FF6200;
+      color: #FF6200;
+      font-size: 0.7rem;
+      text-align: center;
+    }
+    .player-photo-error-large {
+      width: 200px;
+      height: 200px;
+      border-radius: 15px;
+      background: #333;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 3px solid #FF6200;
+      color: #FF6200;
+      font-size: 1rem;
+      text-align: center;
+    }
+    .bid-animation {
+      animation: bidPulse 1s infinite;
+    }
+    @keyframes bidPulse {
+      0% { transform: scale(1); box-shadow: 0 0 10px #FF6200; }
+      50% { transform: scale(1.03); box-shadow: 0 0 20px #FF6200; }
+      100% { transform: scale(1); box-shadow: 0 0 10px #FF6200; }
+    }
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+    .title-glow {
+      text-shadow: 0 0 15px #FF6200, 0 0 30px #FF6200;
+      font-family: 'Cinzel', serif;
+      font-size: 2.5rem;
+      font-weight: 700;
+    }
+    .neon-border {
+      border: 2px solid #FF6200;
+      box-shadow: 0 0 20px #FF6200;
+    }
+    .sidebar {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(10px);
+      border-right: 1px solid rgba(255, 98, 0, 0.3);
+      height: 100vh;
+      padding: 20px;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 250px;
+      z-index: 1000;
+    }
+    .sidebar-menu {
+      list-style: none;
+      padding: 0;
+    }
+    .sidebar-menu li {
+      margin: 10px 0;
+    }
+    .sidebar-menu li a {
+      color: #FF6200;
+      text-decoration: none;
+      font-family: 'Raleway', sans-serif;
+      font-weight: 600;
+      padding: 10px;
+      display: block;
+      border-radius: 10px;
+      transition: background 0.3s ease;
+    }
+    .sidebar-menu li a:hover {
+      background: rgba(255, 98, 0, 0.2);
+      color: #FFFFFF;
+    }
+    .sidebar-content {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 98, 0, 0.3);
+      border-radius: 10px;
+      padding: 15px;
+      margin: 10px 0;
+      max-height: 70vh;
+      overflow-y: auto;
+    }
+    .content {
+      margin-left: 250px;
+      margin-right: 300px;
+      padding: 20px;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .my-team {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(10px);
+      border-left: 1px solid rgba(255, 98, 0, 0.3);
+      height: 100vh;
+      padding: 20px;
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: 300px;
+      z-index: 1000;
+    }
+    .my-team-player-box {
+      background: rgba(255, 98, 0, 0.1);
+      border: 1px solid #FF6200;
+      border-radius: 10px;
+      padding: 10px;
+      margin-bottom: 10px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+    .my-team-player-box:hover {
+      background: rgba(255, 98, 0, 0.2);
+    }
+    .input-orange {
+      border: 2px solid #FF6200;
+      border-radius: 10px;
+      padding: 10px;
+      background: rgba(255, 255, 255, 0.05);
+      color: #FFFFFF;
+      font-family: 'Raleway', sans-serif;
+    }
+    .input-orange:focus {
+      outline: none;
+      box-shadow: 0 0 10px #FF6200;
+    }
+    .select-orange {
+      background: rgba(255, 255, 255, 0.1);
+      border: 2px solid #FF6200;
+      color: #FFFFFF;
+      border-radius: 10px;
+      padding: 10px;
+      font-family: 'Raleway', sans-serif;
+    }
+    .select-orange:focus {
+      outline: none;
+      box-shadow: 0 0 10px #FF6200;
+    }
+    .select-orange option {
+      background: #2C2C2C;
+      color: #FFFFFF;
+      font-family: 'Raleway', sans-serif;
+    }
+    .end-auction-btn {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      font-size: 0.9rem;
+      padding: 8px 15px;
+      z-index: 1000;
+    }
+    .player-card {
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: border 0.3s ease;
+    }
+    .player-card.selected {
+      border: 2px solid #FF6200;
+    }
+    .drag-drop-area {
+      border: 3px dashed #FF6200;
+      border-radius: 15px;
+      padding: 20px;
+      text-align: center;
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(10px);
+      transition: background 0.3s ease;
+    }
+    .drag-drop-area.drag-over {
+      background: rgba(255, 98, 0, 0.1);
+    }
+    .sold-players-list {
+      max-height: 150px;
+      overflow-y: auto;
+      padding: 10px;
+      font-size: 0.9rem;
+    }
+    .sold-players-item {
+      margin-bottom: 5px;
+    }
+    .modal-content {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border: 1px solid #FF6200;
+      color: #FFFFFF;
+      font-family: 'Raleway', sans-serif;
+    }
+    .modal-header, .modal-footer {
+      border-color: rgba(255, 98, 0, 0.3);
+    }
+    .modal-title {
+      font-family: 'Cinzel', serif;
+      color: #FF6200;
+    }
+    .btn-danger {
+      background: #FF4500;
+      border: none;
+      color: #FFFFFF;
+      font-family: 'Cinzel', serif;
+    }
+    .btn-danger:hover {
+      background: #FF6347;
+    }
+    h2 {
+      font-family: 'Cinzel', serif;
+      font-size: 2rem;
+      color: #FF6200;
+    }
+    h3 {
+      font-family: 'Cinzel', serif;
+      font-size: 1.5rem;
+      color: #FF6200;
+    }
+    h4 {
+      font-family: 'Cinzel', serif;
+      font-size: 1.2rem;
+      color: #FF6200;
+    }
+    p, span, div {
+      font-family: 'Raleway', sans-serif;
+      font-size: 1rem;
+      color: #FFFFFF;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    const App = () => {
+      const [role, setRole] = useState(null);
+      const [teamName, setTeamName] = useState('');
+      const [password, setPassword] = useState('');
+      const [teams, setTeams] = useState([]);
+      const [players, setPlayers] = useState([]);
+      const [pools, setPools] = useState([]);
+      const [selectedPlayer, setSelectedPlayer] = useState(null);
+      const [currentPlayer, setCurrentPlayer] = useState(null);
+      const [basePrice, setBasePrice] = useState('');
+      const [priceUnit, setPriceUnit] = useState('C');
+      const [socket, setSocket] = useState(null);
+      const [error, setError] = useState('');
+      const [unsoldMessage, setUnsoldMessage] = useState('');
+      const [soldPlayers, setSoldPlayers] = useState([]);
+      const [auctionEnded, setAuctionEnded] = useState(false);
+      const [sidebarOption, setSidebarOption] = useState('');
+      const [showPlayerPhoto, setShowPlayerPhoto] = useState(null);
+      const [isDragging, setIsDragging] = useState(false);
+      const [poolName, setPoolName] = useState('');
+      const [selectedPool, setSelectedPool] = useState(null);
+      const [currentPoolForParticipants, setCurrentPoolForParticipants] = useState(null);
+      const [showDisclaimer, setShowDisclaimer] = useState(false);
+      const [teamToRemove, setTeamToRemove] = useState(null);
+
+      useEffect(() => {
+        const socketInstance = io('http://localhost:5000');
+        setSocket(socketInstance);
+
+        const fetchData = async () => {
+          try {
+            const teamsRes = await fetch('http://localhost:5000/api/teams');
+            const teamsData = await teamsRes.json();
+            console.log('Fetched teams:', teamsData);
+            setTeams(teamsData);
+
+            const playersRes = await fetch('http://localhost:5000/api/players');
+            const playersData = await playersRes.json();
+            console.log('Fetched players:', playersData);
+            setPlayers(playersData);
+
+            const poolsRes = await fetch('http://localhost:5000/api/pools');
+            const poolsData = await poolsRes.json();
+            console.log('Fetched pools:', poolsData);
+            setPools(poolsData);
+            if (poolsData.length > 0) {
+              setSelectedPool(poolsData[0]._id);
+            }
+
+            const soldPlayersRes = await fetch('http://localhost:5000/api/sold-players');
+            const soldPlayersData = await soldPlayersRes.json();
+            console.log('Fetched sold players:', soldPlayersData);
+            setSoldPlayers(soldPlayersData);
+
+            const auctionStatusRes = await fetch('http://localhost:5000/api/auction-status');
+            const auctionStatusData = await auctionStatusRes.json();
+            console.log('Fetched auction status:', auctionStatusData);
+            setAuctionEnded(auctionStatusData.ended);
+          } catch (err) {
+            console.error('Error fetching initial data:', err);
+            setError('Failed to fetch initial data');
+          }
+        };
+        fetchData();
+
+        socketInstance.on('bidStarted', ({ playerId, currentBid, currentBidder }) => {
+          console.log('Bid started:', { playerId, currentBid, currentBidder });
+          setCurrentPlayer({ playerId, currentBid, currentBidder });
+          setError('');
+          setUnsoldMessage('');
+        });
+        socketInstance.on('bidUpdate', ({ playerId, currentBid, currentBidder }) => {
+          console.log('Bid updated:', { playerId, currentBid, currentBidder });
+          setCurrentPlayer({ playerId, currentBid, currentBidder });
+        });
+        socketInstance.on('bidEnded', ({ playerId, team, finalPrice, playerName, photo }) => {
+          console.log('Bid ended:', { playerId, team, finalPrice, playerName, photo });
+          setCurrentPlayer(null);
+          setPlayers(prev => prev.map(p => p._id === playerId ? { ...p, sold: true } : p));
+          setTeams(prev => prev.map(t => t.name === team ? {
+            ...t,
+            budget: t.budget - finalPrice,
+            players: [...t.players, { name: playerName, price: finalPrice, photo }],
+          } : t));
+          setSoldPlayers(prev => [...prev, { playerId, playerName, team, finalPrice, photo }]);
+        });
+        socketInstance.on('unsold', ({ playerId, message }) => {
+          console.log('Player unsold:', { playerId, message });
+          setCurrentPlayer(null);
+          setUnsoldMessage(message);
+        });
+        socketInstance.on('teamUpdate', (updatedTeams) => {
+          console.log('Team update received:', updatedTeams);
+          setTeams(updatedTeams);
+        });
+        socketInstance.on('poolUpdate', (updatedPools) => {
+          console.log('Pool update received:', updatedPools);
+          setPools(updatedPools);
+          const newPlayers = updatedPools.flatMap(pool => pool.players);
+          console.log('Setting players:', newPlayers);
+          setPlayers(newPlayers);
+          if (updatedPools.length > 0 && !selectedPool) {
+            setSelectedPool(updatedPools[0]._id);
+          }
+        });
+        socketInstance.on('poolsCleared', () => {
+          console.log('Pools cleared');
+          setPools([]);
+          setPlayers([]);
+          setSelectedPool(null);
+          setCurrentPoolForParticipants(null);
+        });
+        socketInstance.on('currentPoolUpdate', (currentPool) => {
+          console.log('Current pool updated for participants:', currentPool);
+          setCurrentPoolForParticipants(currentPool);
+        });
+        socketInstance.on('allDataCleared', () => {
+          console.log('All data cleared');
+          setPools([]);
+          setPlayers([]);
+          setTeams([]);
+          setSoldPlayers([]);
+          setCurrentPlayer(null);
+          setSelectedPool(null);
+          setCurrentPoolForParticipants(null);
+        });
+        socketInstance.on('auctionEnded', () => {
+          console.log('Auction ended, redirecting to game phase');
+          setAuctionEnded(true);
+          // Check team squad sizes before redirecting
+          const disqualifiedTeams = teams.filter(team => team.players.length < 16);
+          if (disqualifiedTeams.length > 0 && role === 'Auctioneer') {
+            setError(`Disqualified teams (less than 16 players): ${disqualifiedTeams.map(t => t.name).join(', ')}`);
+            return;
+          }
+          // Redirect to gameplay.html with teamName and role as query parameters
+          const redirectUrl = `/gameplay.html?role=${role}${teamName ? `&teamName=${encodeURIComponent(teamName)}` : ''}`;
+          window.location.href = redirectUrl;
+        });
+        socketInstance.on('error', ({ message }) => {
+          console.log('Error received:', message);
+          setError(message);
+        });
+
+        return () => socketInstance.disconnect();
+      }, [teams, role, teamName]); // Added dependencies to re-run effect if teams change
+
+      const handleFileUpload = async (files) => {
+        if (!files || files.length === 0) {
+          setError('No files selected');
+          return;
+        }
+        if (!poolName) {
+          setError('Please enter a pool name');
+          return;
+        }
+        const formData = new FormData();
+        Array.from(files).forEach(file => {
+          console.log('Uploading file:', file.name);
+          formData.append('players', file);
+        });
+        formData.append('folderName', poolName);
+
+        try {
+          const res = await fetch('http://localhost:5000/api/upload-pool', {
+            method: 'POST',
+            body: formData,
+          });
+          const data = await res.json();
+          console.log('Upload response:', data);
+          if (data.error) {
+            setError(data.error);
+          } else {
+            console.log('Appending new pool:', data);
+            setPools(prev => [...prev, data]);
+            setPlayers(prev => [...prev, ...data.players]);
+            setPoolName('');
+          }
+        } catch (err) {
+          console.error('Upload error:', err);
+          setError('Failed to upload images');
+        }
+      };
+
+      const handleClearPools = async () => {
+        try {
+          const res = await fetch('http://localhost:5000/api/clear-pools', {
+            method: 'POST',
+          });
+          const data = await res.json();
+          console.log('Clear pools response:', data);
+          if (data.error) {
+            setError(data.error);
+          }
+        } catch (err) {
+          console.error('Error clearing pools:', err);
+          setError('Failed to clear pools');
+        }
+      };
+
+      const handleStartFresh = async () => {
+        try {
+          const res = await fetch('http://localhost:5000/api/clear-all-data', {
+            method: 'POST',
+          });
+          const data = await res.json();
+          console.log('Clear all data response:', data);
+          if (data.error) {
+            setError(data.error);
+          }
+          setShowDisclaimer(false);
+        } catch (err) {
+          console.error('Error clearing all data:', err);
+          setError('Failed to clear all data');
+        }
+      };
+
+      const handleSelectPool = async (poolId) => {
+        setSelectedPool(poolId);
+        setSelectedPlayer(null);
+        try {
+          const res = await fetch('http://localhost:5000/api/set-current-pool', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ poolId }),
+          });
+          const data = await res.json();
+          console.log('Set current pool response:', data);
+          if (data.error) {
+            setError(data.error);
+          } else {
+            socket.emit('setCurrentPool', poolId);
+          }
+        } catch (err) {
+          console.error('Error setting current pool:', err);
+          setError('Failed to set current pool');
+        }
+      };
+
+      const handleRemoveTeam = async (teamName) => {
+        try {
+          const res = await fetch('http://localhost:5000/api/remove-team', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: teamName }),
+          });
+          const data = await res.json();
+          console.log('Remove team response:', data);
+          if (data.error) {
+            setError(data.error);
+          }
+          setTeamToRemove(null);
+        } catch (err) {
+          console.error('Error removing team:', err);
+          setError('Failed to remove team');
+        }
+      };
+
+      const handleDragOver = (e) => {
+        e.preventDefault();
+        setIsDragging(true);
+      };
+
+      const handleDragLeave = (e) => {
+        e.preventDefault();
+        setIsDragging(false);
+      };
+
+      const handleDrop = (e) => {
+        e.preventDefault();
+        setIsDragging(false);
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+          handleFileUpload(files);
+        }
+      };
+
+      const handleFileChange = (e) => {
+        const files = e.target.files;
+        if (files.length > 0) {
+          handleFileUpload(files);
+        }
+      };
+
+      const startBid = (playerId, price, unit) => {
+        if (!playerId) {
+          setError('Please select a player');
+          return;
+        }
+        if (!price) {
+          setError('Please enter a base price');
+          return;
+        }
+        const priceInCrores = unit === 'L' ? parseFloat(price) / 100 : parseFloat(price);
+        console.log('Starting bid for player:', playerId, 'with base price:', priceInCrores, 'Cr');
+        socket.emit('startBid', { playerId, basePrice: priceInCrores });
+        setBasePrice('');
+        setPriceUnit('C');
+        setSelectedPlayer(null);
+      };
+
+      const placeBid = () => {
+        if (!currentPlayer) {
+          setError('No active bid to place');
+          return;
+        }
+        if (!teamName) {
+          setError('Team name not set');
+          return;
+        }
+        console.log('Placing bid for player:', currentPlayer.playerId, 'by team:', teamName);
+        socket.emit('placeBid', { playerId: currentPlayer.playerId, teamName });
+      };
+
+      const endBid = (playerId) => {
+        console.log('Ending bid for player:', playerId);
+        socket.emit('endBid', playerId);
+      };
+
+      const endAuction = async () => {
+        // Check team squad sizes before ending auction
+        const disqualifiedTeams = teams.filter(team => team.players.length < 16);
+        if (disqualifiedTeams.length > 0) {
+          setError(`Cannot end auction. Disqualified teams (less than 16 players): ${disqualifiedTeams.map(t => t.name).join(', ')}`);
+          return;
+        }
+        socket.emit('endAuction');
+      };
+
+      const joinOrCreateTeam = async () => {
+        if (!teamName) {
+          setError('Please enter a team name');
+          return;
+        }
+        const res = await fetch('http://localhost:5000/api/teams', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: teamName }),
+        });
+        const newTeam = await res.json();
+        setTeams(prev => {
+          if (!prev.some(t => t.name === newTeam.name)) {
+            return [...prev, newTeam];
+          }
+          return prev;
+        });
+        setRole('Participant');
+      };
+
+      const ImageWithFallback = ({ src, alt, className, style }) => {
+        const [imgError, setImgError] = useState(false);
+        const [retryCount, setRetryCount] = useState(0);
+        const maxRetries = 3;
+
+        const timestamp = new Date().getTime();
+        const imageUrl = src ? `${src}?t=${timestamp}` : 'https://via.placeholder.com/200';
+
+        useEffect(() => {
+          if (imgError && retryCount < maxRetries) {
+            const timer = setTimeout(() => {
+              console.log(`Retrying to load image: ${imageUrl}, attempt ${retryCount + 1}/${maxRetries}`);
+              setImgError(false);
+              setRetryCount(prev => prev + 1);
+            }, 2000);
+            return () => clearTimeout(timer);
+          }
+        }, [imgError, retryCount]);
+
+        console.log(`Attempting to load image: ${imageUrl} for ${alt}`);
+
+        return imgError ? (
+          <div className={className.includes('large') ? 'player-photo-error-large' : 'player-photo-error'} style={style}>
+            Image Failed
+          </div>
+        ) : (
+          <img
+            src={imageUrl}
+            alt={alt}
+            className={className}
+            style={style}
+            onError={(e) => {
+              console.error(`Image failed to load: ${imageUrl}, attempt ${retryCount + 1}/${maxRetries}`);
+              setImgError(true);
+            }}
+            onLoad={() => {
+              console.log(`Image loaded successfully: ${imageUrl}`);
+              setRetryCount(0);
+            }}
+          />
+        );
+      };
+
+      if (!role) {
+        return (
+          <div className="d-flex justify-content-center align-items-center vh-100">
+            <div className="card p-5 neon-border">
+              <h1 className="text-orange h3 mb-4 title-glow">CRICKET ATTAXX 2.0</h1>
+              <h2 className="text-orange h5 mb-4">Elite Auction Platform</h2>
+              <div className="mb-4">
+                <input
+                  type="text"
+                  value={teamName}
+                  onChange={(e) => setTeamName(e.target.value)}
+                  className="input-orange mb-2 w-100"
+                  placeholder="Enter Team Name"
+                />
+                <button className="btn-orange w-100" onClick={joinOrCreateTeam}>Join as Participant</button>
+              </div>
+              <div>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="input-orange mb-2 w-100"
+                  placeholder="Auctioneer Password"
+                />
+                <button
+                  className="btn-orange w-100"
+                  onClick={() => {
+                    if (password === 'voiceitauctioneer') {
+                      setRole('Auctioneer');
+                    } else {
+                      setError('Incorrect password');
+                    }
+                  }}
+                >
+                  Join as Auctioneer
+                </button>
+              </div>
+              <button className="btn-orange w-100 mt-2" onClick={() => setRole('Viewer')}>Join as Viewer</button>
+              {error && <div className="alert alert-danger mt-3">{error}</div>}
+            </div>
+          </div>
+        );
+      }
+
+      if (role === 'Auctioneer') {
+        const currentPool = pools.find(pool => pool._id === selectedPool);
+        const unsoldPlayers = currentPool ? currentPool.players.filter(player => !player.sold) : [];
+
+        return (
+          <div className="container">
+            <h1 className="text-orange mb-4 title-glow">Auctioneer Dashboard</h1>
+            {error && <div className="alert alert-danger mb-3">{error}</div>}
+            <div className="row">
+              <div className="col-md-4">
+                <h2 className="text-orange h4">Upload Player Pool</h2>
+                <div className="mb-3">
+                  <input
+                    type="text"
+                    value={poolName}
+                    onChange={(e) => setPoolName(e.target.value)}
+                    className="input-orange w-100 mb-2"
+                    placeholder="Enter Pool Name (e.g., Pool 1)"
+                  />
+                </div>
+                <div
+                  className={`drag-drop-area mb-4 ${isDragging ? 'drag-over' : ''}`}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                >
+                  <p className="text-orange mb-2">Drag & Drop Images Here or Click to Select</p>
+                  <input
+                    type="file"
+                    multiple
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    className="form-control input-orange"
+                    style={{ display: 'block', margin: '0 auto' }}
+                  />
+                  <p className="text-orange mt-2">Select multiple images (e.g., ViratKohli.jpg)</p>
+                </div>
+                <button className="btn btn-danger mb-4 w-100" onClick={handleClearPools}>Clear All Pools</button>
+                <div className="card p-3 mb-4">
+                  <h3 className="text-orange h5 mb-3">Start Fresh</h3>
+                  <button className="btn btn-danger w-100" onClick={() => setShowDisclaimer(true)}>
+                    Clear All Data
+                  </button>
+                </div>
+                {showDisclaimer && (
+                  <div className="modal d-block" style={{ background: 'rgba(0, 0, 0, 0.8)' }}>
+                    <div className="modal-dialog">
+                      <div className="modal-content">
+                        <div className="modal-header">
+                          <h5 className="modal-title">Disclaimer</h5>
+                          <button type="button" className="btn-close btn-close-white" onClick={() => setShowDisclaimer(false)}></button>
+                        </div>
+                        <div className="modal-body">
+                          <p>
+                            WARNING: This action will clear all data, including pools, teams, sold players, and auction status.
+                            This cannot be undone. Are you sure you want to proceed?
+                          </p>
+                        </div>
+                        <div className="modal-footer">
+                          <button type="button" className="btn btn-secondary" onClick={() => setShowDisclaimer(false)}>Cancel</button>
+                          <button type="button" className="btn btn-danger" onClick={handleStartFresh}>Confirm</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                <h2 className="text-orange h4 mt-4">Select Pool</h2>
+                {pools.length > 0 ? (
+                  <select
+                    value={selectedPool || ''}
+                    onChange={(e) => handleSelectPool(e.target.value)}
+                    className="select-orange w-100 mb-3"
+                  >
+                    {pools.map(pool => (
+                      <option key={pool._id} value={pool._id}>{pool.name}</option>
+                    ))}
+                  </select>
+                ) : (
+                  <p className="text-orange">No pools created yet.</p>
+                )}
+                {currentPool && (
+                  <>
+                    <h2 className="text-orange h4 mt-4">Start Bid</h2>
+                    <div className="card p-3">
+                      <select
+                        value={selectedPlayer || ''}
+                        onChange={(e) => setSelectedPlayer(e.target.value)}
+                        className="select-orange w-100 mb-3"
+                      >
+                        <option value="">Select Player</option>
+                        {unsoldPlayers.map(player => (
+                          <option key={player._id} value={player._id}>{player.name}</option>
+                        ))}
+                      </select>
+                      {selectedPlayer && (
+                        <div className="d-flex align-items-center mb-3">
+                          <input
+                            type="number"
+                            value={basePrice}
+                            onChange={(e) => setBasePrice(e.target.value)}
+                            className="input-orange me-2 w-auto"
+                            placeholder="Base Price"
+                          />
+                          <select
+                            value={priceUnit}
+                            onChange={(e) => setPriceUnit(e.target.value)}
+                            className="select-orange me-2"
+                          >
+                            <option value="C">Crores (C)</option>
+                            <option value="L">Lakhs (L)</option>
+                          </select>
+                          <button className="btn-orange btn-sm" onClick={() => startBid(selectedPlayer, basePrice, priceUnit)}>
+                            Push to Auction
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </>
+                )}
+                <h2 className="text-orange h4 mt-4">Teams Overview</h2>
+                <div className="card p-3">
+                  {teams.length > 0 ? (
+                    teams.map(team => (
+                      <div key={team._id} className="d-flex justify-content-between align-items-center mb-2">
+                        <span>{team.name} ({team.players.length}/18 players)</span>
+                        <button
+                          className="btn btn-danger btn-sm"
+                          onClick={() => setTeamToRemove(team.name)}
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ))
+                  ) : (
+                    <p>No teams have joined yet.</p>
+                  )}
+                </div>
+                {teamToRemove && (
+                  <div className="modal d-block" style={{ background: 'rgba(0, 0, 0, 0.8)' }}>
+                    <div className="modal-dialog">
+                      <div className="modal-content">
+                        <div className="modal-header">
+                          <h5 className="modal-title">Confirm Removal</h5>
+                          <button type="button" className="btn-close btn-close-white" onClick={() => setTeamToRemove(null)}></button>
+                        </div>
+                        <div className="modal-body">
+                          <p>Are you sure you want to remove the team "{teamToRemove}"? This action cannot be undone.</p>
+                        </div>
+                        <div className="modal-footer">
+                          <button type="button" className="btn btn-secondary" onClick={() => setTeamToRemove(null)}>Cancel</button>
+                          <button type="button" className="btn btn-danger" onClick={() => handleRemoveTeam(teamToRemove)}>Remove</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+              <div className="col-md-8">
+                <div className="row">
+                  <div className="col-md-6">
+                    <h2 className="text-orange h4">Current Bid</h2>
+                    {currentPlayer ? (
+                      <div className="card p-3 neon-border bid-animation">
+                        <div className="d-flex align-items-center">
+                          <ImageWithFallback
+                            src={players.find(p => p._id === currentPlayer.playerId)?.photo}
+                            alt="Player"
+                            className="player-photo me-3"
+                          />
+                          <div>
+                            <p className="mb-1">Player: {players.find(p => p._id === currentPlayer.playerId)?.name}</p>
+                            <p className="mb-1">Current Bid: {currentPlayer.currentBid} Cr</p>
+                            <p className="mb-1">Bidder: {currentPlayer.currentBidder || 'None'}</p>
+                            <button className="btn btn-danger btn-sm mt-2" onClick={() => endBid(currentPlayer.playerId)}>
+                              End Bid
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-orange">{unsoldMessage || 'No active bid'}</p>
+                    )}
+                  </div>
+                  <div className="col-md-6">
+                    <h2 className="text-orange h4">Sold Players</h2>
+                    <div className="card p-3 sold-players-list">
+                      {soldPlayers.length > 0 ? (
+                        soldPlayers.map((sold, idx) => (
+                          <div key={idx} className="sold-players-item">
+                            {sold.playerName} - Sold to: {sold.team} for {sold.finalPrice} Cr
+                          </div>
+                        ))
+                      ) : (
+                        <p>No players sold yet</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <button className="btn-orange end-auction-btn" onClick={endAuction}>End Auction</button>
+          </div>
+        );
+      }
+
+      if (role === 'Participant') {
+        return (
+          <>
+            <div className="sidebar">
+              <h3 className="text-orange-participant mb-4">Menu</h3>
+              <ul className="sidebar-menu">
+                <li><a href="#" onClick={() => setSidebarOption('Current Pool')}>Current Pool</a></li>
+                <li><a href="#" onClick={() => setSidebarOption('Remaining Purse')}>Remaining Purse</a></li>
+              </ul>
+              {sidebarOption === 'Current Pool' && currentPoolForParticipants && (
+                <div className="sidebar-content">
+                  <h4 className="text-orange-participant mb-3">Current Pool: {currentPoolForParticipants.name}</h4>
+                  {currentPoolForParticipants.players.map(player => (
+                    <div key={player._id} className="d-flex align-items-center mb-2">
+                      <ImageWithFallback
+                        src={player.photo}
+                        alt={player.name}
+                        className="player-photo me-2"
+                        style={{ width: '40px', height: '40px' }}
+                      />
+                      <span className="text-orange-participant">{player.name}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {sidebarOption === 'Remaining Purse' && (
+                <div className="sidebar-content">
+                  <h4 className="text-orange-participant mb-3">Remaining Purses</h4>
+                  {teams.map(team => team.name !== teamName && (
+                    <div key={team._id} className="border-bottom py-2 text-orange-participant">
+                      {team.name}: {team.budget} Cr
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="content">
+              <div className="text-center">
+                <h1 className="text-orange-participant h2 mb-4 title-glow">{teamName} Dashboard</h1>
+                {error && <div className="alert alert-danger">{error}</div>}
+                <h2 className="text-orange-participant h4 mb-4">Bidding Process</h2>
+                {currentPlayer ? (
+                  <div className="card p-4 neon-border bid-animation mx-auto" style={{ maxWidth: '500px' }}>
+                    <div className="d-flex flex-column align-items-center justify-content-center mb-3">
+                      <ImageWithFallback
+                        src={players.find(p => p._id === currentPlayer.playerId)?.photo}
+                        alt={players.find(p => p._id === currentPlayer.playerId)?.name || 'Player'}
+                        className="player-photo-large"
+                      />
+                      <div>
+                        <p className="mb-1 text-orange-participant">
+                          Player: {players.find(p => p._id === currentPlayer.playerId)?.name}
+                        </p>
+                        <p className="mb-1 text-orange-participant">Current Bid: {currentPlayer.currentBid} Cr</p>
+                        <p className="mb-1 text-orange-participant">Bidder: {currentPlayer.currentBidder || 'None'}</p>
+                      </div>
+                    </div>
+                    <button className="btn-bid" onClick={placeBid}>Bid Now</button>
+                  </div>
+                ) : (
+                  <p className="text-orange-participant">{unsoldMessage || 'No active bid'}</p>
+                )}
+              </div>
+            </div>
+            <div className="my-team">
+              <h2 className="text-orange-participant h4 mb-4">My Team</h2>
+              {teams.find(t => t.name === teamName) ? (
+                <div>
+                  <p className="text-orange-participant mb-3">Remaining Purse: {teams.find(t => t.name === teamName).budget} Cr</p>
+                  {teams.find(t => t.name === teamName).players.length > 0 ? (
+                    teams.find(t => t.name === teamName).players.map((p, idx) => (
+                      <div key={idx} className="mb-3">
+                        <div
+                          className="my-team-player-box text-orange-participant"
+                          onClick={() => setShowPlayerPhoto(show => (show === p.name ? null : p.name))}
+                        >
+                          {p.name}
+                        </div>
+                        {showPlayerPhoto === p.name && (
+                          <ImageWithFallback
+                            src={p.photo}
+                            alt={p.name}
+                            className="player-photo-large"
+                          />
+                        )}
+                        {showPlayerPhoto === p.name && (
+                          <p className="text-orange-participant mt-1">Price: {p.price} Cr</p>
+                        )}
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-orange-participant">No players in your team yet.</p>
+                  )}
+                </div>
+              ) : (
+                <p className="text-orange-participant">Loading team...</p>
+              )}
+            </div>
+          </>
+        );
+      }
+
+      if (role === 'Viewer') {
+        return (
+          <div className="container">
+            <h1 className="text-orange h2 mb-4 title-glow">{teamName} Viewer Dashboard</h1>
+            <div className="row">
+              <div className="col-md-6">
+                {currentPoolForParticipants && (
+                  <>
+                    <h2 className="text-orange h4">Current Pool: {currentPoolForParticipants.name}</h2>
+                    {currentPoolForParticipants.players.map(player => (
+                      <div key={player._id} className="border-bottom py-3 d-flex align-items-center">
+                        <ImageWithFallback src={player.photo} alt={player.name} className="player-photo me-3" />
+                        <span>{player.name}</span>
+                      </div>
+                    ))}
+                  </>
+                )}
+                <h2 className="text-orange h4 mt-4">Remaining Purses</h2>
+                <div className="card p-3">
+                  {teams.map(team => (
+                    <div key={team._id} className="border-bottom py-2">
+                      {team.name}: {team.budget} Cr
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="col-md-6">
+                <h2 className="text-orange h4">Current Bid</h2>
+                {currentPlayer ? (
+                  <div className="card p-4 neon-border bid-animation">
+                    <div className="d-flex align-items-center">
+                      <ImageWithFallback
+                        src={players.find(p => p._id === currentPlayer.playerId)?.photo}
+                        alt="Player"
+                        className="player-photo me-3"
+                      />
+                      <div>
+                        <p className="mb-1">Player: {players.find(p => p._id === currentPlayer.playerId)?.name}</p>
+                        <p className="mb-1">Current Bid: {currentPlayer.currentBid} Cr</p>
+                        <p className="mb-1">Bidder: {currentPlayer.currentBidder || 'None'}</p>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <p>{unsoldMessage || 'No active bid'}</p>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      }
+    };
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
